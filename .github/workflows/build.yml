@@ -15,12 +15,10 @@ jobs:
 
       - name: Extract Project ZIP
         run: |
-          # Finds any zip file in repository and extracts it
           ZIP_FILE=$(ls *.zip | head -n 1)
           echo "Extracting $ZIP_FILE..."
           unzip -o "$ZIP_FILE" -d extracted_project
           
-          # Move contents if extracted inside a subfolder
           if [ -d "extracted_project/app" ]; then
             cp -r extracted_project/* .
           else
@@ -29,6 +27,10 @@ jobs:
               cp -r $SUBDIR/* .
             fi
           fi
+          
+          # Fix: Remove corrupted gradlew files so GitHub uses system gradle
+          rm -f gradlew gradlew.bat
+          rm -rf gradle/wrapper/
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -39,20 +41,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Grant Permission to Gradlew
-        run: chmod +x gradlew || true
-
       - name: Build Debug APK
-        run: |
-          if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon
-          else
-            gradle assembleDebug --no-daemon
-          fi
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShreeOmEventBooking-APK
+          name: SOR-EVENT-APK
           path: '**/build/outputs/apk/debug/*.apk'
-          
